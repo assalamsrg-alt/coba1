@@ -1,0 +1,475 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Guru - SMAN 1 Angkola Barat</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <style>
+    body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, sans-serif; }
+    .login-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; flex-direction: column;}
+    .login-card { background: white; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%; max-width: 380px; text-align: center; }
+    .login-card img { width: 90px; margin-bottom: 20px; }
+    .app-wrapper { display: none; }
+    .sidebar { background: #1a252f; min-height: 100vh; color: white; padding-top: 20px;}
+    .sidebar a { color: #ecf0f1; text-decoration: none; padding: 12px 20px; display: block; transition: 0.3s; border-radius: 4px; margin: 4px 10px;}
+    .sidebar a:hover, .sidebar a.active { background: #2c3e50; border-left: 4px solid #3498db; }
+    .content-area { padding: 30px; }
+    .footer { text-align: center; margin-top: 20px; font-size: 0.85em; color: #7f8c8d; }
+    .camera-btn { position: relative; overflow: hidden; }
+    .camera-btn input[type=file] { position: absolute; top: 0; right: 0; min-width: 100%; min-height: 100%; font-size: 100px; text-align: right; opacity: 0; outline: none; background: white; cursor: inherit; display: block; }
+    .preview-img { max-width: 100%; height: auto; margin-top: 15px; border-radius: 8px; display: none; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .dashboard-card { border-radius: 10px; padding: 20px; color: white; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);}
+    .card-title-dash { font-size: 0.9rem; font-weight: bold; text-transform: uppercase; opacity: 0.9;}
+    .card-value-dash { font-size: 2rem; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <!-- PAGE LOGIN -->
+  <div class="login-wrapper" id="loginPage">
+    <div class="login-card">
+      <img src="https://images.seeklogo.com/logo-png/30/2/provinsi-sumatera-utara-logo-png_seeklogo-306271.png" alt="Logo Sumut">
+      <h5 class="mb-4 text-secondary">Portal Guru<br><strong class="text-dark">SMAN 1 Angkola Barat</strong></h5>
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="mb-3">
+          <input type="text" class="form-control" id="username" placeholder="Username" required>
+        </div>
+        <div class="mb-4">
+          <input type="password" class="form-control" id="password" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 fw-bold" id="btnLogin">Masuk Aplikasi</button>
+      </form>
+    </div>
+    <div class="footer">www.sman1angkolabarat.sch.id</div>
+  </div>
+
+  <!-- PAGE APLIKASI -->
+  <div class="app-wrapper container-fluid p-0" id="appPage">
+    <div class="row m-0">
+      
+      <!-- SIDEBAR -->
+      <div class="col-md-3 col-lg-2 sidebar d-md-block collapse" id="sidebarMenu">
+        <div class="text-center mb-4">
+          <img src="https://images.seeklogo.com/logo-png/30/2/provinsi-sumatera-utara-logo-png_seeklogo-306271.png" width="60" alt="Logo">
+          <h6 class="mt-3 mb-1" id="userDisplayName">Nama Guru</h6>
+          <span class="badge bg-primary" id="userRoleBadge">Role</span>
+        </div>
+        
+        <a href="#" class="active" onclick="showMenu('dashboard', this)"><i class="fa fa-chart-pie me-2"></i> Dashboard</a>
+        <a href="#" onclick="showMenu('sambut', this)"><i class="fa fa-handshake me-2"></i> Sambut Siswa</a>
+        <a href="#" onclick="showMenu('piket', this)"><i class="fa fa-clipboard-list me-2"></i> Piket</a>
+        <a href="#" onclick="showMenu('permisi', this)"><i class="fa fa-user-times me-2"></i> Permisi / Izin</a>
+        <a href="#" onclick="showMenu('upacara', this)"><i class="fa fa-flag me-2"></i> Pembina Upacara</a>
+        <a href="#" onclick="showMenu('apel', this)"><i class="fa fa-users me-2"></i> Pembina Apel Pagi</a>
+        <a href="#" onclick="showMenu('yasinan', this)"><i class="fa fa-book-open me-2"></i> Pembina Yasinan</a>
+        <a href="#" onclick="showMenu('tanpaket', this)"><i class="fa fa-clock me-2"></i> Tanpa Ket-Telat</a>
+        
+        <!-- Khusus Admin -->
+        <div id="adminMenus" style="display:none;">
+          <hr class="text-secondary">
+          <div class="text-secondary ms-3 mb-2" style="font-size:0.8rem; font-weight:bold;">PENGATURAN ADMIN</div>
+          <a href="#" onclick="showMenu('cruduser', this)"><i class="fa fa-users-cog me-2"></i> Kelola User (CRUD)</a>
+        </div>
+        
+        <a href="#" onclick="logout()" class="text-danger mt-4"><i class="fa fa-sign-out-alt me-2"></i> Keluar</a>
+      </div>
+
+      <!-- MAIN KONTEN -->
+      <div class="col-md-9 col-lg-10 content-area">
+        
+        <button class="btn btn-dark d-md-none mb-4" data-bs-toggle="collapse" data-bs-target="#sidebarMenu">
+          <i class="fa fa-bars"></i> Menu Aplikasi
+        </button>
+
+        <!-- DASHBOARD ADMIN -->
+        <div id="section-dashboard-admin" class="menu-section" style="display:none;">
+          <h3 class="mb-4">Dashboard Administrator</h3>
+          <div class="row">
+            <div class="col-md-4"><div class="dashboard-card bg-primary"><div class="card-title-dash">Sambut Siswa - 5 S Hari ini</div><div class="card-value-dash" id="dashAd1">0</div></div></div>
+            <div class="col-md-4"><div class="dashboard-card bg-danger"><div class="card-title-dash">Guru Tdk Hadir Hari Ini</div><div class="card-value-dash" id="dashAd2">0</div></div></div>
+            <div class="col-md-4"><div class="dashboard-card bg-success"><div class="card-title-dash">Piket Tepat Waktu Hari Ini</div><div class="card-value-dash" id="dashAd3">0</div></div></div>
+            <div class="col-md-4"><div class="dashboard-card bg-info"><div class="card-title-dash">GTK Pulang Tepat Waktu</div><div class="card-value-dash" id="dashAd4">0</div></div></div>
+            <div class="col-md-4"><div class="dashboard-card bg-secondary"><div class="card-title-dash">Rekap Sambut Siswa</div><div class="card-value-dash" id="dashAd5">0</div></div></div>
+            <div class="col-md-4"><div class="dashboard-card bg-warning text-dark"><div class="card-title-dash">Rekap Tidak Hadir Guru</div><div class="card-value-dash" id="dashAd6">0</div></div></div>
+            <div class="col-md-4"><div class="dashboard-card bg-success"><div class="card-title-dash">Proporsi Hadir</div><div class="card-value-dash" id="dashAd7">0%</div></div></div>
+            <div class="col-md-4"><div class="dashboard-card bg-dark"><div class="card-title-dash">Rekap Total Data</div><div class="card-value-dash" id="dashAd8">0</div></div></div>
+            <div class="col-md-4"><div class="dashboard-card bg-secondary"><div class="card-title-dash">Rekap Permisi</div><div class="card-value-dash" id="dashAd9">0</div></div></div>
+          </div>
+        </div>
+
+        <!-- DASHBOARD USER (Memuat data sendiri + Ganti Password) -->
+        <div id="section-dashboard-user" class="menu-section" style="display:none;">
+          <h3 class="mb-4">Dashboard Saya</h3>
+          <div class="row">
+            <div class="col-md-7 mb-4">
+              <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                  <h5 class="card-title"><i class="fa fa-user-circle text-primary"></i> Data Pribadi</h5>
+                  <hr>
+                  <table class="table table-borderless">
+                    <tr><td width="150">Nama Guru</td><td>: <strong id="uDashNama"></strong></td></tr>
+                    <tr><td>Nomor Guru (NG)</td><td>: <strong id="uDashNG"></strong></td></tr>
+                    <tr><td>Username</td><td>: <strong id="uDashUsername"></strong></td></tr>
+                    <tr><td>Role</td><td>: <strong id="uDashRole"></strong></td></tr>
+                  </table>
+                  <div class="alert alert-info mt-3">
+                    <i class="fa fa-info-circle"></i> Selamat bekerja! Pastikan Anda mengisi absensi Sambut Siswa atau Permisi setiap harinya saat berada di radius sekolah.
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-5 mb-4">
+              <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                  <h5 class="card-title text-danger"><i class="fa fa-key"></i> Ganti Password</h5>
+                  <hr>
+                  <form onsubmit="submitGantiPass(event)">
+                    <div class="mb-3">
+                      <label class="form-label">Password Baru</label>
+                      <input type="password" class="form-control" id="newPass" required placeholder="Masukkan kata sandi baru">
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100"><i class="fa fa-save"></i> Perbarui Password</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MENU CRUD USER (Admin Only) -->
+        <div id="section-cruduser" class="menu-section" style="display:none;">
+          <h3 class="mb-4">Kelola User</h3>
+          <div class="card shadow-sm border-0"><div class="card-body">
+            <div class="alert alert-warning">
+              <i class="fa fa-tools"></i> <strong>Modul CRUD User</strong> sedang dalam pengembangan. Sebagai Administrator, nantinya Anda dapat Menambah, Mengedit, dan Menghapus data sheet "User" langsung dari halaman ini.
+            </div>
+          </div></div>
+        </div>
+
+        <!-- FORM SAMBUT SISWA -->
+        <div id="section-sambut" class="menu-section" style="display:none;">
+          <h3 class="mb-4">Form Sambut Siswa</h3>
+          <div class="card shadow-sm border-0"><div class="card-body">
+            <form id="formSambut" onsubmit="submitSambut(event)">
+              <div class="mb-3">
+                <label class="fw-bold text-secondary">Koordinat Lokasi GPS</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="sambutLokasi" readonly required placeholder="Ambil lokasi absensi...">
+                  <button type="button" class="btn btn-outline-primary" onclick="getLocation('sambutLokasi')"><i class="fa fa-map-marker-alt"></i> Deteksi</button>
+                </div>
+              </div>
+              
+              <div class="mb-4">
+                <label class="fw-bold text-secondary">Ambil Foto (Otomatis kompres < 1MB)</label><br>
+                <button type="button" class="btn btn-info text-white camera-btn shadow-sm">
+                   <i class="fa fa-camera"></i> Buka Kamera HP
+                   <input type="file" accept="image/*" capture="environment" id="sambutFoto" onchange="processImageCompress(this, 'previewSambutFoto')">
+                </button>
+                <img id="previewSambutFoto" class="preview-img">
+              </div>
+
+              <button type="submit" class="btn btn-success w-100 fw-bold" id="btnSubmitSambut"><i class="fa fa-paper-plane"></i> Kirim Data Kehadiran</button>
+            </form>
+          </div></div>
+        </div>
+
+        <!-- FORM PERMISI / IZIN -->
+        <div id="section-permisi" class="menu-section" style="display:none;">
+          <h3 class="mb-4">Pengajuan Permisi / Izin</h3>
+          <div class="card shadow-sm border-0"><div class="card-body">
+            <form id="formPermisi" onsubmit="submitPermisi(event)">
+              <div class="mb-3">
+                <label class="fw-bold text-secondary">Jenis Izin</label>
+                <select class="form-select" id="permisiJenis" required onchange="cekJenisIzin()">
+                  <option value="">-- Pilih Jenis --</option>
+                  <option value="Sakit">Sakit</option>
+                  <option value="Izin Tidak Hadir">Izin Tidak Hadir</option>
+                  <option value="Dinas Luar">Dinas Luar</option>
+                  <option value="Terlambat Hadir">Terlambat Hadir</option>
+                  <option value="Pulang Duluan">Pulang Duluan</option>
+                </select>
+              </div>
+              
+              <div class="mb-3">
+                <label class="fw-bold text-secondary">Alasan Lengkap</label>
+                <textarea class="form-control" id="permisiAlasan" rows="3" required></textarea>
+              </div>
+
+              <!-- Pulang Duluan Logic -->
+              <div class="mb-3 p-3 bg-light rounded border" id="wrapJjmSisa" style="display:none;">
+                <label class="fw-bold text-secondary text-danger">JJM Belum Dikerjakan (JJM Sisa)</label>
+                <input type="number" class="form-control" id="permisiJjmSisa" placeholder="Masukkan angka JJM">
+              </div>
+
+              <div class="mb-3">
+                <label class="fw-bold text-secondary">Lokasi Pengajuan (GPS)</label>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="permisiLokasi" readonly required placeholder="Ambil lokasi...">
+                  <button type="button" class="btn btn-outline-primary" onclick="getLocation('permisiLokasi')"><i class="fa fa-map-marker-alt"></i> Deteksi</button>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <label class="fw-bold text-secondary">Lampirkan Foto (Auto kompres)</label><br>
+                <button type="button" class="btn btn-secondary text-white camera-btn shadow-sm">
+                   <i class="fa fa-image"></i> Ambil Foto / Upload
+                   <input type="file" accept="image/*" capture="environment" id="permisiFoto" onchange="processImageCompress(this, 'previewPermisiFoto')">
+                </button>
+                <img id="previewPermisiFoto" class="preview-img">
+              </div>
+
+              <button type="submit" class="btn btn-warning w-100 fw-bold" id="btnSubmitPermisi"><i class="fa fa-save"></i> Kirim Permohonan</button>
+            </form>
+          </div></div>
+        </div>
+        
+        <div class="footer mt-5">www.sman1angkolabarat.sch.id</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <script>
+    let currentUser = {};
+
+    function showMenu(menuId, el) {
+      document.querySelectorAll('.menu-section').forEach(m => m.style.display = 'none');
+      
+      if(menuId === 'dashboard') {
+        if(currentUser.role === 'admin') {
+           document.getElementById('section-dashboard-admin').style.display = 'block';
+           loadAdminDashboard();
+        } else {
+           document.getElementById('section-dashboard-user').style.display = 'block';
+        }
+      } else {
+        const target = document.getElementById('section-' + menuId);
+        if(target) target.style.display = 'block';
+        else Swal.fire('Info', 'Menu dalam pengembangan.', 'info');
+      }
+      
+      document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+      if(el) el.classList.add('active');
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      const btn = document.getElementById('btnLogin');
+      
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Otentikasi...'; btn.disabled = true;
+
+      google.script.run.withSuccessHandler(res => {
+        btn.innerHTML = 'Masuk Aplikasi'; btn.disabled = false;
+        if(res.success) {
+          currentUser = res;
+          currentUser.username = u;
+          
+          document.getElementById('loginPage').style.display = 'none';
+          document.getElementById('appPage').style.display = 'block';
+          
+          document.getElementById('userDisplayName').innerText = res.nama;
+          document.getElementById('userRoleBadge').innerText = res.role.toUpperCase();
+          
+          // Setup dashboard User
+          document.getElementById('uDashNama').innerText = res.nama;
+          document.getElementById('uDashNG').innerText = res.ng;
+          document.getElementById('uDashUsername').innerText = u;
+          document.getElementById('uDashRole').innerText = res.role.toUpperCase();
+          
+          if(res.role === 'admin') {
+            document.getElementById('adminMenus').style.display = 'block';
+          }
+          
+          showMenu('dashboard');
+        } else {
+          Swal.fire('Gagal', res.message, 'error');
+        }
+      }).login(u, p);
+    }
+
+    function logout() {
+      currentUser = {};
+      document.getElementById('loginPage').style.display = 'flex';
+      document.getElementById('appPage').style.display = 'none';
+      document.getElementById('loginForm').reset();
+      document.getElementById('adminMenus').style.display = 'none';
+    }
+
+    function loadAdminDashboard() {
+       google.script.run.withSuccessHandler(data => {
+           document.getElementById('dashAd1').innerText = data.sambutSiswa;
+           document.getElementById('dashAd2').innerText = data.guruTdkHadir;
+           document.getElementById('dashAd3').innerText = data.piketTepatWaktu;
+           document.getElementById('dashAd4').innerText = data.pulangTepatWaktu;
+           document.getElementById('dashAd5').innerText = data.rekapSambut;
+           document.getElementById('dashAd6').innerText = data.rekapTdkHadir;
+           document.getElementById('dashAd7').innerText = data.proporsiHadir;
+           document.getElementById('dashAd8').innerText = data.rekapTotal;
+           document.getElementById('dashAd9').innerText = data.rekapPermisi;
+       }).getAdminDashboardData();
+    }
+
+    function getLocation(inputId) {
+      if (navigator.geolocation) {
+        Swal.fire({title: 'Melacak GPS...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            Swal.close();
+            document.getElementById(inputId).value = pos.coords.latitude + ", " + pos.coords.longitude;
+          },
+          (err) => {
+            Swal.fire('Error', 'Gagal melacak lokasi. Aktifkan GPS.', 'error');
+          },
+          { enableHighAccuracy: true }
+        );
+      }
+    }
+
+    function cekJenisIzin() {
+      const val = document.getElementById('permisiJenis').value;
+      const wrap = document.getElementById('wrapJjmSisa');
+      if(val === 'Pulang Duluan' || val === 'Terlambat Hadir') {
+        wrap.style.display = 'block';
+        document.getElementById('permisiJjmSisa').required = true;
+      } else {
+        wrap.style.display = 'none';
+        document.getElementById('permisiJjmSisa').required = false;
+      }
+    }
+
+    // FUNGSI KOMPRESI GAMBAR (Max 1MB)
+    function processImageCompress(input, previewId) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        
+        Swal.fire({title: 'Memproses Gambar...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+        
+        reader.onload = function(event) {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 1200; // Resolusi maksimum (Cukup aman untuk file < 1MB)
+            const MAX_HEIGHT = 1200;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Kompresi iteratif untuk pastikan Base64 < 1.3 MB (setara file ~1 MB)
+            let quality = 0.9;
+            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+            
+            while (dataUrl.length > 1300000 && quality > 0.1) {
+              quality -= 0.1;
+              dataUrl = canvas.toDataURL('image/jpeg', quality);
+            }
+
+            Swal.close();
+            const prevImg = document.getElementById(previewId);
+            prevImg.src = dataUrl;
+            prevImg.style.display = 'block';
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function submitSambut(e) {
+      e.preventDefault();
+      const lokasi = document.getElementById('sambutLokasi').value;
+      const fotoImg = document.getElementById('previewSambutFoto').src;
+      
+      if(!lokasi) return Swal.fire('Error', 'Silakan klik deteksi lokasi.', 'error');
+      if(!fotoImg || fotoImg.includes(location.href)) return Swal.fire('Error', 'Foto wajib diambil.', 'error');
+
+      const data = {
+        ng: currentUser.ng,
+        nama: currentUser.nama,
+        lokasi: lokasi,
+        foto: fotoImg
+      };
+
+      const btn = document.getElementById('btnSubmitSambut');
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Menyimpan...'; btn.disabled = true;
+
+      google.script.run.withSuccessHandler(res => {
+        btn.innerHTML = '<i class="fa fa-paper-plane"></i> Kirim Data Kehadiran'; btn.disabled = false;
+        if(res.success) {
+          Swal.fire('Berhasil!', res.message, 'success');
+          document.getElementById('formSambut').reset();
+          document.getElementById('previewSambutFoto').style.display = 'none';
+        } else {
+          Swal.fire('Gagal', res.message, 'error');
+        }
+      }).simpanSambutSiswa(data);
+    }
+
+    function submitPermisi(e) {
+      e.preventDefault();
+      const fileFoto = document.getElementById('previewPermisiFoto').src;
+      
+      const data = {
+        ng: currentUser.ng,
+        nama: currentUser.nama,
+        email: currentUser.email,
+        jenis: document.getElementById('permisiJenis').value,
+        alasan: document.getElementById('permisiAlasan').value,
+        lokasi: document.getElementById('permisiLokasi').value,
+        jjmSisa: document.getElementById('permisiJjmSisa').value,
+        foto: fileFoto && !fileFoto.includes(location.href) ? fileFoto : ""
+      };
+
+      const btn = document.getElementById('btnSubmitPermisi');
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Memproses...'; btn.disabled = true;
+
+      google.script.run.withSuccessHandler(res => {
+        btn.innerHTML = '<i class="fa fa-save"></i> Kirim Permohonan'; btn.disabled = false;
+        if(res.success) {
+          Swal.fire('Berhasil!', res.message, 'success');
+          document.getElementById('formPermisi').reset();
+          document.getElementById('previewPermisiFoto').style.display = 'none';
+          cekJenisIzin();
+        } else {
+          Swal.fire('Gagal', res.message, 'error');
+        }
+      }).simpanPermisi(data);
+    }
+    
+    function submitGantiPass(e) {
+      e.preventDefault();
+      const newPass = document.getElementById('newPass').value;
+      Swal.fire({title: 'Memproses...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
+      
+      google.script.run.withSuccessHandler(res => {
+        if(res.success) {
+           Swal.fire('Berhasil', 'Password Anda sukses diubah.', 'success').then(() => {
+             document.getElementById('newPass').value = '';
+           });
+        } else {
+           Swal.fire('Gagal', res.message, 'error');
+        }
+      }).gantiPassword(currentUser.username, newPass);
+    }
+  </script>
+</body>
+</html>
